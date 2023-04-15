@@ -43,6 +43,11 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void deleteFavorite(WordPair pair) {
+    favorites.remove(pair);
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatefulWidget {
@@ -135,14 +140,14 @@ class GeneratorPage extends StatelessWidget {
                   appState.toggleFavorite();
                 },
                 icon: Icon(icon),
-                label: Text('Like'),
+                label: const Text('Like'),
               ),
               const SizedBox(width: 10),
               ElevatedButton(
                 onPressed: () {
                   appState.getNext();
                 },
-                child: Text('Next'),
+                child: const Text('Next'),
               ),
             ],
           ),
@@ -163,18 +168,31 @@ class BigCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
+    final styleMedium = theme.textTheme.displayMedium!
+        .copyWith(color: theme.colorScheme.onPrimary, fontSize: 15);
+    final styleLarge = theme.textTheme.displayLarge!.copyWith(
       color: theme.colorScheme.onPrimary,
+      fontSize: 20,
+      fontStyle: FontStyle.italic,
     );
 
     return Card(
       color: theme.colorScheme.primary,
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Text(
-          pair.asLowerCase,
-          style: style,
-          semanticsLabel: "${pair.first} ${pair.second}",
+        child: Row(
+          children: [
+            Text(
+              pair.first,
+              style: styleMedium,
+              semanticsLabel: "${pair.first} ${pair.second}",
+            ),
+            Text(
+              pair.second,
+              style: styleLarge,
+              semanticsLabel: "${pair.second} ${pair.second}",
+            ),
+          ],
         ),
       ),
     );
@@ -187,17 +205,26 @@ class FavouritePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var myState = context.watch<MyAppState>();
-
-    return ListView.builder(
-      itemCount: myState.favorites.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          leading: const Icon(Icons.favorite),
-          title: Text(
-            (myState.favorites[index]).asCamelCase,
-          ),
-        );
-      },
+    if (myState.favorites.isEmpty) {
+      return const Center(
+        child: Text("No Favorite Item"),
+      );
+    }
+    return ListView(
+      children: myState.favorites
+          .map(
+            (e) => Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListTile(
+                onTap: () {
+                  myState.deleteFavorite(e);
+                },
+                leading: const Icon(Icons.delete),
+                title: Text(e.asCamelCase),
+              ),
+            ),
+          )
+          .toList(),
     );
   }
 }
